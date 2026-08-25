@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hplc-chromatography-peak-resolver"
+version = "2.0.0"
+description = "HPLC-Resolver: Chromatographic Peak Deconvolution & Purity Engine"
+readme = "README.md"
+authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security/Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+hplc-chromatography-peak-resolver = "hplc_resolver.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/abusuraihsakhri/hplc-chromatography-peak-resolver"
+Repository = "https://github.com/abusuraihsakhri/hplc-chromatography-peak-resolver.git"
