@@ -12,7 +12,7 @@ from enrichment import (
     MultidetectorDataFusionUvdadelsdcadmsEngine,
     ImpurityProfilingGenotoxicImpurityTrackingEngine,
     ColumnChemistryExpertSystemEngine,
-    2dlcMultidimensionalChromatographySupportEngine,
+    Engine_2dlcMultidimensionalChromatographySupportEngine,
     CalibrationQuantitationIntelligenceEngine,
     UspepjpPharmacopeialComplianceEngine,
     HplcchromatographypeakresolverEnrichmentSuite,

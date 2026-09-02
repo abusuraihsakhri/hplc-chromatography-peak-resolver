@@ -262,7 +262,7 @@ class ColumnChemistryExpertSystemEngine:
 # 6. 2D-LC & MULTI-DIMENSIONAL CHROMATOGRAPHY SUPPORT
 # =============================================================================
 @dataclass
-class 2dlcMultidimensionalChromatographySupportEngineResult:
+class Engine_2dlcMultidimensionalChromatographySupportEngineResult:
     feature_name: str = "2D-LC & Multi-Dimensional Chromatography Support"
     status: str = "OPTIMAL"
     score: float = 0.0
@@ -271,16 +271,16 @@ class 2dlcMultidimensionalChromatographySupportEngineResult:
     recommendations: List[str] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
-class 2dlcMultidimensionalChromatographySupportEngine:
+class Engine_2dlcMultidimensionalChromatographySupportEngine:
     """
     2D-LC & Multi-Dimensional Chromatography Support: **Description:** Comprehensive 2D-LC peak tracking and method development tools.
     """
     def __init__(self, threshold: float = 1.0, config: Optional[Dict[str, Any]] = None):
         self.threshold = threshold
         self.config = config or {}
-        self.history: List[2dlcMultidimensionalChromatographySupportEngineResult] = []
+        self.history: List[Engine_2dlcMultidimensionalChromatographySupportEngineResult] = []
 
-    def evaluate(self, primary_value: float, secondary_value: float = 0.0, **kwargs) -> 2dlcMultidimensionalChromatographySupportEngineResult:
+    def evaluate(self, primary_value: float, secondary_value: float = 0.0, **kwargs) -> Engine_2dlcMultidimensionalChromatographySupportEngineResult:
         alerts = []
         recs = []
         status = "OPTIMAL"
@@ -297,7 +297,7 @@ class 2dlcMultidimensionalChromatographySupportEngine:
         else:
             recs.append("Parameters nominal under standard operating bounds.")
 
-        res = 2dlcMultidimensionalChromatographySupportEngineResult(
+        res = Engine_2dlcMultidimensionalChromatographySupportEngineResult(
             feature_name="2D-LC & Multi-Dimensional Chromatography Support",
             status=status,
             score=score,
@@ -419,7 +419,7 @@ class HplcchromatographypeakresolverEnrichmentSuite:
         self.multidetectordatafus = MultidetectorDataFusionUvdadelsdcadmsEngine()
         self.impurityprofilinggen = ImpurityProfilingGenotoxicImpurityTrackingEngine()
         self.columnchemistryexper = ColumnChemistryExpertSystemEngine()
-        self.2dlcmultidimensional = 2dlcMultidimensionalChromatographySupportEngine()
+        self.engine_2dlcmultidimensional = Engine_2dlcMultidimensionalChromatographySupportEngine()
         self.calibrationquantitat = CalibrationQuantitationIntelligenceEngine()
         self.uspepjppharmacopeial = UspepjpPharmacopeialComplianceEngine()
 
@@ -430,7 +430,7 @@ class HplcchromatographypeakresolverEnrichmentSuite:
         results["MultidetectorDataFusionUvdadelsdcadmsEngine"] = self.multidetectordatafus.evaluate(primary_val, secondary_val)
         results["ImpurityProfilingGenotoxicImpurityTrackingEngine"] = self.impurityprofilinggen.evaluate(primary_val, secondary_val)
         results["ColumnChemistryExpertSystemEngine"] = self.columnchemistryexper.evaluate(primary_val, secondary_val)
-        results["2dlcMultidimensionalChromatographySupportEngine"] = self.2dlcmultidimensional.evaluate(primary_val, secondary_val)
+        results["Engine_2dlcMultidimensionalChromatographySupportEngine"] = self.engine_2dlcmultidimensional.evaluate(primary_val, secondary_val)
         results["CalibrationQuantitationIntelligenceEngine"] = self.calibrationquantitat.evaluate(primary_val, secondary_val)
         results["UspepjpPharmacopeialComplianceEngine"] = self.uspepjppharmacopeial.evaluate(primary_val, secondary_val)
         return results
