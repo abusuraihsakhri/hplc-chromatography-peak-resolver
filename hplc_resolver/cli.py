@@ -5,10 +5,24 @@ import argparse
 import csv
 import json
 import sys
+from pathlib import Path
 from .models import FrontierPayload
 from .agents import HPLCCoordinator
 
 coordinator = HPLCCoordinator()
+
+
+def _safe_resolve_path(file_path: str, must_exist: bool = False) -> Path:
+    """Resolve a path safely, preventing directory traversal outside the working directory."""
+    cwd = Path.cwd()
+    resolved = (cwd / file_path).resolve()
+    try:
+        resolved.relative_to(cwd.resolve())
+    except ValueError:
+        raise ValueError(f"Path traversal detected: '{file_path}' resolves outside the working directory")
+    if must_exist and not resolved.exists():
+        raise FileNotFoundError(f"Input file not found: '{file_path}'")
+    return resolved
 
 
 def main(argv=None):
@@ -69,22 +83,35 @@ def main(argv=None):
         return 0
 
     if args.command == "batch":
-        with open(args.input, mode="r", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            fieldnames = list(reader.fieldnames or [])
-            rows = list(reader)
+        in_path = _safe_resolve_path(args.input, must_exist=True)
+        out_path = _safe_resolve_path(args.output, must_exist=False)
+
+        try:
+            with open(in_path, mode="r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                fieldnames = list(reader.fieldnames or [])
+                rows = list(reader)
+        except (csv.Error, UnicodeDecodeError) as e:
+            print(f"Error reading CSV input: {e}", file=sys.stderr)
+            return 1
 
         out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
         out_rows = []
-        for r in rows:
-            payload = FrontierPayload(
-                task_id=r.get("task_id", "TASK-01"),
-                target_identifier=r.get("target_identifier", "TARGET-01"),
-                primary_metric=float(r.get("primary_metric", 15.0)),
-                secondary_metric=float(r.get("secondary_metric", 5.0)),
-                status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
-            )
+        errors = 0
+        for idx, r in enumerate(rows):
+            try:
+                payload = FrontierPayload(
+                    task_id=r.get("task_id", f"TASK-{idx+1:03d}"),
+                    target_identifier=r.get("target_identifier", f"TARGET-{idx+1:03d}"),
+                    primary_metric=float(r.get("primary_metric", 15.0)),
+                    secondary_metric=float(r.get("secondary_metric", 5.0)),
+                    status_descriptor=r.get("status_descriptor", "NOMINAL"),
+                    is_critical_flag=str(r.get("is_critical_flag", "")).lower() in ("true", "1", "yes"),
+                )
+            except (ValueError, TypeError) as e:
+                print(f"Skipping row {idx + 1}: invalid data ({e})", file=sys.stderr)
+                errors += 1
+                continue
             dossier = coordinator.process(payload)
             row_dict = dict(r)
             row_dict["overall_status"] = dossier["overall_status"]
@@ -93,11 +120,11 @@ def main(argv=None):
             row_dict["consensus_summary"] = dossier["consensus_summary"]
             out_rows.append(row_dict)
 
-        with open(args.output, mode="w", encoding="utf-8", newline="") as f:
+        with open(out_path, mode="w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=out_fields)
             writer.writeheader()
             writer.writerows(out_rows)
-        print(f"Processed {len(out_rows)} records -> {args.output}")
+        print(f"Processed {len(out_rows)} records -> {args.output} ({errors} skipped)")
         return 0
 
     if args.command == "serve":

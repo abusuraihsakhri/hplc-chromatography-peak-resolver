@@ -1,9 +1,14 @@
 """
 Distributed Component High-Throughput Traffic & Stress Testing Simulator for Hplc Chromatography Peak Resolver.
 """
+import os
 import time
 import random
 import sys
+
+# Ensure audit key is set before importing agents
+os.environ.setdefault("AUDIT_SECRET_KEY", "simulator-audit-key-min-32-chars-long-0000")
+
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import PHIGuard, SecurityException, AuditLogger
