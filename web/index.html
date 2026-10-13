@@ -1,236 +1,91 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hplc Chromatography Peak Resolver — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Local chromatogram peak detection, integration and resolution estimation from time–signal CSV data.">
+<meta name="color-scheme" content="dark">
+<title>HPLC Peak Resolver — Chromatogram Analysis</title>
+<style>
+:root {--bg:#090f1c;--panel:#111d30;--edge:#2b3b51;--text:#edf4ff;--muted:#aabbce;--blue:#64b5ff;--green:#5de0b3;--danger:#ff9898}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1230px;margin:auto;padding:22px}header{border-bottom:1px solid var(--edge);margin-bottom:20px;padding-bottom:18px}
+h1{font-size:clamp(1.6rem,2.8vw,2.2rem);line-height:1.2;margin:0 0 8px}h2{font-size:1.04rem;margin:0 0 14px}p{margin:6px 0;color:var(--muted)}
+.kicker{color:var(--green);text-transform:uppercase;font-size:.72rem;letter-spacing:.1em;font-weight:700;margin-bottom:9px}
+.layout{display:grid;grid-template-columns:minmax(245px,305px) minmax(0,1fr);gap:18px;align-items:start}
+.panel{border:1px solid var(--edge);border-radius:12px;background:var(--panel);padding:20px;min-width:0}
+label{font-size:.83rem;color:var(--muted);display:block;margin:14px 0 5px}
+input{width:100%;border:1px solid #52657c;border-radius:6px;padding:10px;background:#071323;color:var(--text);font:inherit}
+input:focus-visible,button:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+button{font:inherit;font-weight:650;border-radius:6px;padding:10px 14px;cursor:pointer;border:1px solid #5886b9;color:var(--text);background:#21456d}
+button.primary{background:#12629d;border-color:#4ab0e9}button:hover:not(:disabled){filter:brightness(1.18)}
+button:disabled{opacity:.5;cursor:not-allowed}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+#analyze,#demo{flex:1;min-width:110px}.hint{font-size:.81rem;line-height:1.45}
+.statrow{display:flex;gap:12px;margin:5px 0 14px;flex-wrap:wrap}
+.stat{flex:1;min-width:110px;background:#091827;border:1px solid var(--edge);border-radius:8px;padding:10px}
+.stat strong{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums}.stat span{font-size:.72rem;color:var(--muted)}
+#status{min-height:26px;font-size:.85rem;color:var(--green);margin:8px 0}#status[data-error=true]{color:var(--danger)}
+#chart{width:100%;height:auto;display:block;background:#091827;border:1px solid var(--edge);border-radius:8px}
+.axis{stroke:#72849c;stroke-width:1.5}.trace{stroke:#65c4fb;stroke-width:2;stroke-linejoin:round}
+.tick,.axis-label{fill:#adbed0;font-size:13px}.peak-dot{fill:#5de0b3;stroke:#112a30;stroke-width:2}
+.peak-label{fill:#dcfdf1;font-weight:700;font-size:14px}
+.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:10px 9px;border-bottom:1px solid var(--edge);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{color:#d6e8fa;font-weight:700}caption{text-align:left;padding:0 0 10px;color:var(--muted)}
+.note{border-left:3px solid var(--blue);padding:1px 13px;margin:17px 0 0;font-size:.8rem;color:var(--muted)}
+footer{font-size:.8rem;padding:18px 0;color:var(--muted)}
+@media(max-width:820px){main{padding:14px}.layout{grid-template-columns:1fr}.panel{padding:16px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Hplc Chromatography Peak Resolver</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Hplc Chromatography Peak Resolver Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "hplc-chromatography-peak-resolver",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+<main>
+<header>
+<div class="kicker">Chromatography / local analysis</div>
+<h1>HPLC Peak Resolver</h1>
+<p>Detect peaks, estimate integrated areas and full width at half maximum (FWHM), and calculate adjacent-peak resolution from detector traces.</p>
+</header>
+<div class="layout">
+<section class="panel" aria-labelledby="controls-heading">
+<h2 id="controls-heading">Trace inputs</h2>
+<label for="file">Time–signal CSV</label>
+<input id="file" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain">
+<p class="hint">Two numeric columns (time in minutes, detector signal); header optional. Comma, tab or semicolon separated. Maximum 100,000 points / 3 MB.</p>
+<p id="source-name" class="hint">Synthetic example (3 Gaussian peaks)</p>
+<label for="prominence">Minimum peak prominence (% of signal range)</label>
+<input id="prominence" type="number" min="0.1" max="99" step="0.5" value="6">
+<label for="dead-time">Dead time t₀ (min, optional)</label>
+<input id="dead-time" type="number" min="0.0001" step="any" placeholder="For retention factor k′">
+<div class="actions"><button id="demo" type="button">Load example</button><button id="analyze" class="primary" type="button">Analyze trace</button></div>
+<div class="actions"><button id="export" type="button" disabled>Export peaks CSV</button></div>
+<p class="note">Files and calculations stay on this device. There is no account, server upload, API request, or third-party script.</p>
+</section>
+<div>
+<section class="panel" aria-labelledby="trace-heading">
+<h2 id="trace-heading">Chromatogram</h2>
+<div class="statrow">
+<div class="stat"><strong id="total-points">—</strong><span>Data points</span></div>
+<div class="stat"><strong id="total-peaks">—</strong><span>Detected peaks</span></div>
+</div>
+<div id="status" role="status" aria-live="polite"></div>
+<svg id="chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 340" role="img" aria-label="Chromatogram line plot with detected peak markers"></svg>
+</section>
+<section class="panel" style="margin-top:18px" aria-labelledby="peak-heading">
+<h2 id="peak-heading">Estimated peak parameters</h2>
+<div class="table-wrap">
+<table>
+<caption>Area % is relative to detected peak areas, not chemical purity.</caption>
+<thead><tr><th>Peak</th><th>tR (min)</th><th>Height</th><th>Area</th><th>Area %</th><th>FWHM (min)</th><th>Rs vs prior</th></tr></thead>
+<tbody id="peak-rows"><tr><td colspan="7">Load data to see peak parameters.</td></tr></tbody>
+</table>
+</div>
+<p class="hint">Rs is estimated as 1.18 × ΔtR / (FWHM₁ + FWHM₂). Undefined widths or resolution are shown as —.</p>
+</section>
+</div>
+</div>
+<footer>Method: three-point smoothing, prominence screening, valley-based peak segmentation, local linear baseline, and trapezoidal integration. These estimates do not perform Gaussian/EMG deconvolution, identify compounds, validate a method, or establish spectral peak purity or USP conformity. Review against reference standards and qualified chromatography software for regulated applications.</footer>
+</main>
+<script src="./peak-analysis.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>
