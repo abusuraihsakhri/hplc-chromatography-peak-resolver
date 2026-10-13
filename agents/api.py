@@ -1,8 +1,10 @@
 """
 FastAPI REST API Server for Hplc Chromatography Peak Resolver.
 """
+import os
+import hmac
 from typing import Dict, Any, List, Optional, Tuple
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
 from .base import AuditLogger, PHIGuard
 from hplc_resolver.peaks import analyze_trace
@@ -13,7 +15,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Hplc Chromatography Peak Resolver API",
-    description="Enterprise Distributed Component Platform (AI Drug Discovery, Structural Biology & Wet-Lab Robotics)",
+    description="HPLC trace peak calculations and legacy threshold-based task auditing",
     version="3.0.0-ENTERPRISE",
 )
 
@@ -38,7 +40,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "hplc-chromatography-peak-resolver", "domain": "AI Drug Discovery, Structural Biology & Wet-Lab Robotics", "standard": "wwPDB / IUPAC / OpenSMILES / ISAC Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "hplc-chromatography-peak-resolver", "domain": "Analytical Chemistry", "standard": "User-defined metric thresholds; not validated against a pharmacopeial monograph", "version": "3.0.0-ENTERPRISE"}
 
 
 @app.get("/metrics")
@@ -66,5 +68,11 @@ def api_chat(req: ChatRequest):
 
 
 @app.get("/api/audit/logs")
-def api_audit_logs():
+def api_audit_logs(x_admin_token: Optional[str] = Header(default=None)):
+    """Audit metadata is accessible only with a separately configured admin token."""
+    expected = os.getenv("API_ADMIN_TOKEN", "")
+    if len(expected) < 32:
+        raise HTTPException(status_code=503, detail="Admin audit access is not configured")
+    if not x_admin_token or not hmac.compare_digest(x_admin_token, expected):
+        raise HTTPException(status_code=403, detail="Forbidden")
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
