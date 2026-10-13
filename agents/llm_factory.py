@@ -11,7 +11,7 @@ class MockLLM:
 
     def invoke(self, prompt: str) -> str:
         PHIGuard.assert_no_phi(prompt)
-        return f"[{self.system_name} Deterministic Verification Engine]: Clinical & scientific analysis verified for query: '{prompt[:60]}...'. Parameters evaluated under wwPDB / IUPAC / OpenSMILES / ISAC Standards."
+        return f"[{self.system_name} Mock response]: No chromatographic or scientific validation was performed. Inquiry: '{prompt[:60]}...'. Use the peaks workflow for numerical chromatogram analysis."
 
 
 class LLMFactory:
