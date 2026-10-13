@@ -39,7 +39,8 @@
         const width = 980, height = 340, l = 64, r = 20, t = 20, b = 46;
         const left = input[0].time, right = input[input.length - 1].time;
         const yValues = input.map(p => p.signal);
-        const low = Math.min(...yValues), high = Math.max(...yValues);
+        let low = Infinity, high = -Infinity;
+        for (const v of yValues) { if (v < low) low = v; if (v > high) high = v; }
         const pad = Math.max((high - low) * 0.07, 1e-9);
         const yMin = low - pad, yMax = high + pad;
         const x = val => l + (val - left) * (width - l - r) / (right - left);
