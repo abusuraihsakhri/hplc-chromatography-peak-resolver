@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Hplc Chromatography Peak Resolver API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
-    "version": "3.0.0-ENTERPRISE",
+    "title": "HPLC Chromatography Peak Resolver API",
+    "description": "Approximate chromatogram peak detection plus retained legacy metric-threshold audits. No method validation or pharmacopeial conformance is provided.",
+    "version": "2.1.0",
     "contact": {
       "name": "Dr. Abu Suraih Sakhri",
       "url": "https://github.com/abusuraihsakhri"
@@ -22,7 +22,7 @@
     },
     "/metrics": {
       "get": {
-        "summary": "Prometheus operational metrics",
+        "summary": "Basic counters",
         "responses": {
           "200": {
             "description": "Prometheus text metrics"
@@ -32,7 +32,7 @@
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
+        "summary": "Legacy generic threshold-based task assessment",
         "requestBody": {
           "content": {
             "application/json": {
@@ -76,7 +76,7 @@
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
+        "summary": "Deterministic mock response (no live language model)",
         "requestBody": {
           "content": {
             "application/json": {
@@ -107,6 +107,84 @@
         "responses": {
           "200": {
             "description": "Cryptographic audit trail"
+          },
+          "403": {
+            "description": "Invalid admin token"
+          },
+          "503": {
+            "description": "Admin access not configured"
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Admin-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Separate API_ADMIN_TOKEN secret (at least 32 characters)"
+          }
+        ]
+      }
+    },
+    "/api/peaks": {
+      "post": {
+        "summary": "Detect and integrate peaks in a time–signal trace",
+        "description": "Three-point smoothing, prominence screening, valley splitting, trapezoidal area estimation; exploratory only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "samples"
+                ],
+                "properties": {
+                  "samples": {
+                    "type": "array",
+                    "minItems": 5,
+                    "maxItems": 100000,
+                    "items": {
+                      "type": "array",
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  },
+                  "min_prominence": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "exclusiveMaximum": 1,
+                    "default": 0.06
+                  },
+                  "dead_time": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "default": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Detected peak parameters and trace summary"
+          },
+          "422": {
+            "description": "Input validation failed"
           }
         }
       }

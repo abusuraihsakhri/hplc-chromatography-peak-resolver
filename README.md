@@ -1,177 +1,90 @@
 # HPLC Chromatography Peak Resolver
 
-> **Domain:** Computational Biology & AI Drug Discovery
-> **Reference Guidelines & Standards:** `wwPDB, IUPAC & CLSI Computational Guidelines`
+Chromatogram peak screening and approximate integration for time–signal HPLC data. The repository also retains earlier, generic threshold-based audit agents and two Python API/CLI implementations for backward compatibility.
 
-<div align="center">
+## Browser application
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+Open `web/index.html` in a modern desktop or mobile browser. The static application is also configured for GitHub Pages deployment after the repository's Pages environment is enabled and a deployment succeeds.
 
-</div>
+- Load a CSV, TSV, or semicolon-delimited file with increasing **retention time (minutes)** and **detector response**. Column headers are optional.
+- Adjust prominence threshold and optionally provide dead time, t₀.
+- View a chromatogram and peak table; export peak parameters as CSV.
+- Try **Load example** without uploading any data. A second sample is in `chromatogram_sample.csv`.
 
----
+**Privacy:** Browser calculations and file processing are local. The page uses no external libraries, analytics, or API calls. GitHub Pages, when enabled, serves only the static files.
 
-## What It Does
+## Calculations and limitations
 
-HPLC Chromatography Peak Resolver is an enterprise-grade analytical platform for chromatographic peak deconvolution, purity assessment, and anomaly detection. It combines deterministic calculation engines with multi-agent consensus workflows to evaluate analytical measurements against reference standards.
+The browser (`web/peak-analysis.js`) and Python (`hplc_resolver/peaks.py`) use three-point smoothing, prominence-based peak detection, valley-based peak segmentation, local linear-baseline subtraction, and trapezoidal area estimation. Adjacent-peak resolution is approximated using `Rs = 1.18 × (tR₂ − tR₁)/(FWHM₁ + FWHM₂)`; retention factor is `k′ = (tR − t₀)/t₀` when dead time is given. Area percentages are fractions of **detected integrated area**, not assay purity.
 
-The system provides two parallel implementations:
-- **agents/ (Enterprise v3.0.0):** wwPDB / IUPAC / OpenSMILES / ISAC Standards compliance
-- **hplc_resolver/ (Frontier v2.0.0):** USP <621> Chromatography Standards compliance
+**This is not peak deconvolution, Gaussian/EMG fitting, compound identification, spectral peak purity analysis, automated method validation, or certified pharmacopeial conformance testing.** Overlapping peaks, baseline drift, sampling resolution, and noise can significantly bias reported estimates. Confirm scientific decisions in qualified chromatography software.
 
----
+The older `agents/`, `hplc_resolver/agents.py`, and `enrichment.py` modules remain available. Their numeric alerts are generic operational thresholds; their named enrichment modules are not implementations of the claimed domain-specific optimizers. They should not be interpreted as USP <621> or other standards-conformant assessments.
 
-## Key Capabilities & Algorithmic Modules
+## Python installation and CLI
 
-- **Deterministic Calculation Engine:** Strict compliance with standard reference formulations and thresholds.
-- **Risk & Urgency Classification:** Multi-tier categorization (ROUTINE, ELEVATED_RISK, CRITICAL_STAT_PANIC) with automated clinical/operational action recommendations.
-- **Validation & Guardrails:** Rigorous input bounds checking, NaN/Inf rejection, and anomaly detection.
-- **Zero-PHI Outbound Guard:** Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-- **HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation.
-- **FastAPI REST API:** OpenAPI 3.1 endpoints with Prometheus-compatible metrics.
-
----
-
-## Installation
+Python 3.10+:
 
 ```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/hplc-chromatography-peak-resolver.git
-cd hplc-chromatography-peak-resolver
-
-# Install dependencies
-pip install fastapi uvicorn pydantic pytest
-
-# Set the required audit secret key (must be at least 32 characters)
-export AUDIT_SECRET_KEY="your-cryptographically-secure-random-key-here"
+python -m pip install -e ".[server,test]"
+python cli.py peaks -i chromatogram_sample.csv -o peak_results.csv
+python cli.py peaks -i chromatogram_sample.csv --prominence 0.05 --dead-time 1.0
+python -m pytest -q
 ```
 
----
+Both `python cli.py peaks` and the installed `hplc-chromatography-peak-resolver peaks` command analyze time–signal data. The `--output` argument writes peak metrics to a CSV; without it, results are printed as JSON. Paths are confined to the working directory.
 
-## CLI Quickstart & Usage
+Legacy threshold audit commands are preserved:
 
-### 1. Single Task Evaluation
 ```bash
-python cli.py audit --task-id TASK-001 --target KEY-01 --primary 28.5 --secondary 14.2 --critical --status DISCORDANT
-```
-
-### 2. System Configuration Query
-```bash
-python cli.py chat "Explain specifications"
-```
-
-### 3. Batch CSV Processing
-```bash
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
 python cli.py batch -i sample.csv -o results.csv
-```
-
-### 4. Verify Audit Trail Integrity
-```bash
 python cli.py verify-audit
-```
-
-### 5. Launch REST API Server
-```bash
 python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
-### Parameter Reference
-- `--task-id`: Unique task/case identifier
-- `--target`: Target identifier (e.g., specimen key)
-- `--primary`: Primary domain measurement (float, must be finite)
-- `--secondary`: Secondary kinetic/confidence score (float, must be finite)
-- `--critical`: Emergency escalation flag
-- `--status`: Status descriptor (e.g., NOMINAL, DISCORDANT, ANOMALY)
+The legacy audit CLI and server require `AUDIT_SECRET_KEY` (at least 32 characters). Use an unpredictable, deployment-specific key; never commit it or distribute it with browser assets. A key change invalidates verification of any stored audit trail created with a previous key; the current audit ledger is process-memory-only.
 
-### Input Data Schema (CSV Batch)
+## REST API
 
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `task_id` | Unique task identifier | Required |
-| `target_identifier` | Target/specimen identifier | Required |
-| `primary_metric` | Primary measurement value | Required |
-| `secondary_metric` | Secondary metric value | Optional (default: 0.0) |
-| `is_critical_flag` | Critical escalation flag | Optional (default: false) |
-| `status_descriptor` | Status code descriptor | Optional (default: NOMINAL) |
+The primary server (`python cli.py serve`) exposes:
 
----
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/health` | Health and metadata |
+| POST | `/api/peaks` | Compute peaks from `{"samples": [[time, signal], ...], "min_prominence": 0.06, "dead_time": null}` |
+| POST | `/api/audit` | Legacy threshold-based assessment |
+| POST | `/api/chat` | Deterministic mock response (no external language model) |
+| GET | `/metrics` | Basic counters |
+| GET | `/api/audit/logs` | Admin-restricted audit metadata |
 
-## REST API Endpoints
+To request audit logs, configure a separate `API_ADMIN_TOKEN` of at least 32 characters and supply it as an `X-Admin-Token` request header. If not configured, the audit-log endpoint is disabled. The API has no user identity management or rate limiting; restrict network exposure and do not send sensitive real patient identifiers.
 
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| GET | `/health` | Service health check |
-| GET | `/metrics` | Operational metrics |
-| POST | `/api/audit` | Submit task evaluation |
-| POST | `/api/chat` | System configuration query |
-| GET | `/api/audit/logs` | Retrieve audit trail |
+The alternative `hplc_resolver.server.create_app()` also supports `/api/peaks` and retains its existing generic audit endpoints.
 
----
-
-## Security & Enterprise Architecture
-
-* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs. Requires `AUDIT_SECRET_KEY` environment variable (min 32 chars).
-* **Path Traversal Protection:** All file operations are restricted to the working directory.
-* **Input Validation:** Metric values are validated to reject NaN/Inf and enforce bounds.
-
----
-
-## Testing & Verification
+## Docker
 
 ```bash
-# Set test environment variable
-export AUDIT_SECRET_KEY="test-secret-key-for-pytest-min-32-chars-long"
-
-# Run the automated test suite
-pytest -v
-
-# Execute high-throughput batch simulation benchmarks
-python simulator.py 1000
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+docker compose up --build
 ```
 
----
+Compose binds the service to **127.0.0.1:8000** by default, not the public internet. Supply `API_ADMIN_TOKEN` separately to enable audit-log viewing. The image installs the declared server dependencies from `pyproject.toml`.
 
-## Container Deployment
+## Validation and development
 
 ```bash
-docker build -t hplc-chromatography-peak-resolver .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY="your-secure-key-here-min-32-chars" hplc-chromatography-peak-resolver
+python -m pip install -e ".[server,test]"
+python -m pytest -q
+python -m compileall -q agents hplc_resolver cli.py enrichment.py simulator.py
+node --check web/peak-analysis.js
+node --check web/app.js
+node --test tests/peak-analysis.test.cjs
 ```
 
----
+GitHub Actions runs Python tests on 3.10–3.12 and browser-algorithm tests on Node 22. The browser UI requires a modern browser with file upload, SVG, Blob downloads, and JavaScript enabled. No Python runtime is loaded in the static page; native JavaScript avoids large Pyodide downloads.
 
-## Project Structure
+## License
 
-```
-hplc-chromatography-peak-resolver/
-├── agents/                  # Enterprise v3.0.0 implementation
-│   ├── api.py              # FastAPI REST server
-│   ├── base.py             # Security, PHI guard, audit trail
-│   ├── models.py           # Pydantic v2 schemas
-│   ├── supervisor.py       # Multi-agent orchestrator
-│   ├── workers.py          # Specialized domain workers
-│   ├── llm_factory.py      # LLM client factory
-│   ├── metrics.py          # Prometheus metrics collector
-│   ├── learning.py         # Bayesian calibration engine
-│   └── streamer.py         # WebSocket telemetry broadcaster
-├── hplc_resolver/          # Frontier v2.0.0 implementation
-│   ├── agents.py           # Coordinator and sub-agents
-│   ├── engine.py           # Domain calculation engine
-│   ├── models.py           # Dataclass schemas
-│   ├── cli.py              # CLI entry point
-│   └── server.py           # FastAPI server factory
-├── tests/                  # Pytest test suite
-├── web/                    # Operations console (HTML/JS)
-├── cli.py                  # Main CLI entry point
-├── simulator.py            # High-throughput simulation
-├── enrichment.py           # Domain enrichment engines
-├── sample.csv              # Sample batch input data
-├── Dockerfile              # Container build config
-└── pyproject.toml          # Project metadata
-```
+MIT — see [LICENSE](LICENSE).

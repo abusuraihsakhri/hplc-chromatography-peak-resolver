@@ -1,16 +1,17 @@
 """
 FastAPI REST API Server for HPLC-Resolver: Chromatographic Peak Deconvolution & Purity Agent.
 """
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Tuple
 from .models import FrontierPayload
 from .agents import HPLCCoordinator
+from .peaks import analyze_trace
 
 coordinator = HPLCCoordinator()
 
 
 def create_app():
     try:
-        from fastapi import FastAPI
+        from fastapi import FastAPI, HTTPException
         from pydantic import BaseModel
 
         app = FastAPI(
@@ -28,6 +29,18 @@ def create_app():
             is_critical_flag: bool = True
             attributes: Dict[str, Any] = {}
 
+        class PeakRequest(BaseModel):
+            samples: List[Tuple[float, float]]
+            min_prominence: float = 0.06
+            dead_time: Optional[float] = None
+
+        @app.post("/api/peaks")
+        def api_peaks(req: PeakRequest):
+            try:
+                return analyze_trace(req.samples, req.min_prominence, req.dead_time)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
+
         class ChatRequest(BaseModel):
             query: str
 
@@ -37,16 +50,19 @@ def create_app():
 
         @app.post("/api/audit")
         def api_audit(req: TaskRequest):
-            payload = FrontierPayload(
-                task_id=req.task_id,
-                target_identifier=req.target_identifier,
-                primary_metric=req.primary_metric,
-                secondary_metric=req.secondary_metric,
-                status_descriptor=req.status_descriptor,
-                is_critical_flag=req.is_critical_flag,
-                attributes=req.attributes,
-            )
-            return coordinator.process(payload)
+            try:
+                payload = FrontierPayload(
+                    task_id=req.task_id,
+                    target_identifier=req.target_identifier,
+                    primary_metric=req.primary_metric,
+                    secondary_metric=req.secondary_metric,
+                    status_descriptor=req.status_descriptor,
+                    is_critical_flag=req.is_critical_flag,
+                    attributes=req.attributes,
+                )
+                return coordinator.process(payload)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         @app.post("/api/chat")
         def api_chat(req: ChatRequest):

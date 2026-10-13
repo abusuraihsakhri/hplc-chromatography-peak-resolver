@@ -7,6 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from hplc_resolver.peaks import parse_chromatogram, analyze_trace
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import AuditLogger
@@ -52,6 +53,15 @@ def main(argv=None):
 
     # Verify Audit
     subparsers.add_parser("verify-audit", help="Verify HMAC audit trail integrity")
+
+    # Peak analysis (independent of the generic audit workflow)
+    p_peaks = subparsers.add_parser("peaks", help="Analyze HPLC time/signal CSV")
+    p_peaks.add_argument("-i", "--input", required=True)
+    p_peaks.add_argument("-o", "--output", help="Optional CSV of detected peaks")
+    p_peaks.add_argument("--prominence", type=float, default=0.06,
+                         help="Minimum peak prominence as fraction of signal range (default: 0.06)")
+    p_peaks.add_argument("--dead-time", type=float,
+                         help="Optional unretained dead time in minutes")
 
     # Serve
     p_serve = subparsers.add_parser("serve", help="Launch FastAPI REST server")
@@ -139,6 +149,28 @@ def main(argv=None):
             writer.writerows(out_rows)
         print(f"Processed {len(out_rows)} records -> {args.output} ({errors} skipped)")
         return 0
+
+    if args.command == "peaks":
+        try:
+            source_path = _safe_resolve_path(args.input, must_exist=True)
+            trace = parse_chromatogram(source_path.read_text(encoding="utf-8-sig"))
+            results = analyze_trace(trace, args.prominence, args.dead_time)
+            if args.output:
+                output_path = _safe_resolve_path(args.output)
+                fieldnames = ["index", "retentionTime", "height", "area",
+                              "areaPercent", "fwhm", "resolutionFromPrevious",
+                              "retentionFactor", "startTime", "endTime"]
+                with output_path.open("w", encoding="utf-8", newline="") as handle:
+                    writer = csv.DictWriter(handle, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(results["peaks"])
+                print(f"Exported {len(results['peaks'])} peaks to {output_path}")
+            else:
+                print(json.dumps(results, indent=2))
+            return 0
+        except (OSError, ValueError, csv.Error) as exc:
+            print(f"Peak analysis failed: {exc}", file=sys.stderr)
+            return 1
 
     if args.command == "serve":
         import uvicorn
