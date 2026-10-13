@@ -81,7 +81,9 @@
         });
         const n = y.length, smooth = y.map((v, i) => i === 0 || i === n - 1
             ? v : (y[i - 1] + 2 * v + y[i + 1]) / 4);
-        const low = Math.min(...smooth), high = Math.max(...smooth), span = high - low;
+        let low = Infinity, high = -Infinity;
+        for (const v of smooth) { if (v < low) low = v; if (v > high) high = v; }
+        const span = high - low;
         if (span <= 0) return {peaks: [], points: points.length, minSignal: low, maxSignal: high};
         const minimaLeft = [], minimaRight = [];
         let floor = Infinity;
@@ -154,7 +156,9 @@
                     1.18 * (p.retentionTime - peaks[i - 1].retentionTime) / denom;
             }
         });
-        return {peaks, points: n, minSignal: Math.min(...y), maxSignal: Math.max(...y)};
+        let ymin = Infinity, ymax = -Infinity;
+        for (const v of y) { if (v < ymin) ymin = v; if (v > ymax) ymax = v; }
+        return {peaks, points: n, minSignal: ymin, maxSignal: ymax};
     }
     return {parseCsv, analyze};
 });
