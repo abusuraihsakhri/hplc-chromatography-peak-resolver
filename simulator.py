@@ -4,10 +4,11 @@ Distributed Component High-Throughput Traffic & Stress Testing Simulator for Hpl
 import os
 import time
 import random
+import secrets
 import sys
 
 # Ensure audit key is set before importing agents
-os.environ.setdefault("AUDIT_SECRET_KEY", "simulator-audit-key-min-32-chars-long-0000")
+os.environ.setdefault("AUDIT_SECRET_KEY", secrets.token_urlsafe(32))
 
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
