@@ -1,16 +1,17 @@
 """
 FastAPI REST API Server for HPLC-Resolver: Chromatographic Peak Deconvolution & Purity Agent.
 """
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Tuple
 from .models import FrontierPayload
 from .agents import HPLCCoordinator
+from .peaks import analyze_trace
 
 coordinator = HPLCCoordinator()
 
 
 def create_app():
     try:
-        from fastapi import FastAPI
+        from fastapi import FastAPI, HTTPException
         from pydantic import BaseModel
 
         app = FastAPI(
@@ -27,6 +28,18 @@ def create_app():
             status_descriptor: str = "DISCORDANT_ANOMALY"
             is_critical_flag: bool = True
             attributes: Dict[str, Any] = {}
+
+        class PeakRequest(BaseModel):
+            samples: List[Tuple[float, float]]
+            min_prominence: float = 0.06
+            dead_time: Optional[float] = None
+
+        @app.post("/api/peaks")
+        def api_peaks(req: PeakRequest):
+            try:
+                return analyze_trace(req.samples, req.min_prominence, req.dead_time)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         class ChatRequest(BaseModel):
             query: str
