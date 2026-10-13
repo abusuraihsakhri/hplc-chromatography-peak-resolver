@@ -50,16 +50,19 @@ def create_app():
 
         @app.post("/api/audit")
         def api_audit(req: TaskRequest):
-            payload = FrontierPayload(
-                task_id=req.task_id,
-                target_identifier=req.target_identifier,
-                primary_metric=req.primary_metric,
-                secondary_metric=req.secondary_metric,
-                status_descriptor=req.status_descriptor,
-                is_critical_flag=req.is_critical_flag,
-                attributes=req.attributes,
-            )
-            return coordinator.process(payload)
+            try:
+                payload = FrontierPayload(
+                    task_id=req.task_id,
+                    target_identifier=req.target_identifier,
+                    primary_metric=req.primary_metric,
+                    secondary_metric=req.secondary_metric,
+                    status_descriptor=req.status_descriptor,
+                    is_critical_flag=req.is_critical_flag,
+                    attributes=req.attributes,
+                )
+                return coordinator.process(payload)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         @app.post("/api/chat")
         def api_chat(req: ChatRequest):
