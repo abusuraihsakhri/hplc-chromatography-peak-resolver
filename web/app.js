@@ -73,14 +73,14 @@
         tbody.replaceChildren();
         if (!peaks.length) {
             const tr = document.createElement("tr"), cell = document.createElement("td");
-            cell.colSpan = 7; cell.textContent = "No peaks detected at this prominence threshold.";
+            cell.colSpan = 8; cell.textContent = "No peaks detected at this prominence threshold.";
             tr.appendChild(cell); tbody.appendChild(tr); return;
         }
         peaks.forEach(p => {
             const tr = document.createElement("tr");
             const values = [p.index, format(p.retentionTime,3), format(p.height,3),
                 format(p.area,3), format(p.areaPercent,1), format(p.fwhm,3),
-                format(p.resolutionFromPrevious,2)];
+                format(p.resolutionFromPrevious,2), format(p.retentionFactor,2)];
             values.forEach(value => {
                 const td = document.createElement("td");
                 td.textContent = String(value);
