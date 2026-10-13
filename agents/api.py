@@ -1,10 +1,11 @@
 """
 FastAPI REST API Server for Hplc Chromatography Peak Resolver.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Tuple
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from .base import AuditLogger, PHIGuard
+from hplc_resolver.peaks import analyze_trace
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -15,6 +16,20 @@ app = FastAPI(
     description="Enterprise Distributed Component Platform (AI Drug Discovery, Structural Biology & Wet-Lab Robotics)",
     version="3.0.0-ENTERPRISE",
 )
+
+
+class PeakRequest(BaseModel):
+    samples: List[Tuple[float, float]]
+    min_prominence: float = 0.06
+    dead_time: Optional[float] = None
+
+
+@app.post("/api/peaks")
+def api_peaks(req: PeakRequest):
+    try:
+        return analyze_trace(req.samples, req.min_prominence, req.dead_time)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 class ChatRequest(BaseModel):
